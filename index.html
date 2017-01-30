@@ -130,9 +130,10 @@
         d.value = +d.value;
     });
 
-    var table = d3.select('#table').append('table');
-
+    var datePareser   = d3.timeParse('%Y-%m')
     var dateFormatter = d3.timeFormat('%Y-%m')
+
+    var table = d3.select('#table').append('table');
 
     var thead = table.append('thead').append('tr');
 
@@ -148,6 +149,55 @@
     tr.append('td').html((d) => dateFormatter(d.date))
     tr.append('td').html((d) => d.category)
     tr.append('td').html((d) => d.value)
+
+    var monthMargin = {
+        top:    20,
+        right:  20,
+        bottom: 70,
+        left:   40
+    }
+    var monthWidth  = 900 - monthMargin.left - monthMargin.right;
+    var monthHeight = 300 - monthMargin.top  - monthMargin.bottom;
+
+    var svg = d3.select('#month').append('svg')
+        .attr('width',  monthWidth  + monthMargin.left + monthMargin.right)
+        .attr('height', monthHeight + monthMargin.top  + monthMargin.bottom)
+        .append('g')
+        .attr('transform', ` translate( ${monthMargin.left}, ${monthMargin.top} ) `);
+
+    // Calc scales
+    var x = d3.scaleTime()
+        .range([0, monthWidth])
+        .domain([data[0].date, data[data.length - 1].date]);
+    var y = d3.scaleLinear()
+        .range([monthHeight, 0])
+        .domain([0, d3.max(data, (d) => d.value)]);
+
+    svg.selectAll('rect')
+        .data(data)
+        .enter().append('rect')
+        .style('fill', '#A4C639')
+        .attr('x', (d) => x(d.date))
+        .attr('width', 50)
+        .attr('y', (d) => y(d.value))
+        .attr('height', (d) => monthHeight - y(d.value));
+
+    var xAxis = d3.axisBottom()
+        .scale(x)
+        .tickFormat(d3.timeFormat('%Y-%m'));
+
+    var yAxis = d3.axisLeft()
+        .scale(y)
+        .tickSize(-monthWidth)
+        .ticks(3);
+
+    svg.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', `translate( 0, ${monthHeight} )`)
+        .call(xAxis)
+    svg.append('g')
+        .attr('class', 'y axis')
+        .call(yAxis)
 
 </script>
 
