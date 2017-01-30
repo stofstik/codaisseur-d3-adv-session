@@ -240,19 +240,28 @@
         .text((d) => d.value);
 
     /*
-       PI CHART
+     * PI CHART
     */
+
+    // Define donut size
+    const DONUT_WIDTH  = 250;
+    const DONUT_HEIGHT = 250;
+    const DONUT_RADIUS = 125;
+
+    // Set some noice colors
+    var color = d3.scaleOrdinal().range(['#C5FFB3', '#4EE1FF', '#9232FF'])
 
     // Structure by category
     // Creating 3 key value pairs: { category, totalValue }
     // Using d3 sum helper to reduce specific values into one for each category
-    var groupByCategory = 
-        d3
+    function groupByCategory(data) {
+        return d3
         .nest()
         .key( (d) => d.category )
         .sortKeys(d3.ascending)
         .rollup( (v) => d3.sum(v, (d) => d.value) )
         .entries(data);
+    }
 
     // Create a table
     // Get the html element
@@ -265,47 +274,63 @@
     var counterTBody = counterTable.append('tbody');
     // Use D3 to render tr elements for each data entry
     var counterTR    = counterTBody.selectAll('tr')
-        .data(groupByCategory).enter()
+        .data(groupByCategory(data)).enter()
         .append('tr')
     counterTR.append('td').html((d) => d.key);
     counterTR.append('td').html((d) => d.value);
+    counterTR.style('background', (d) => color(d.key));
+    counterTR.on('click', catClicked);
 
-    // Define donut size
-    const DONUT_WIDTH  = 250;
-    const DONUT_HEIGHT = 250;
-    const DONUT_RADIUS = 125;
+    function catClicked(e) {
+        // Get category
+        if(e.key) {
+            console.log(e.key);
+            drawDonut(data.filter( (d) => d.category !== e.key ))
+        }
+        if(e.data) {
+            console.log(e.data.key);
+            drawDonut(data.filter( (d) => d.category !== e.data.key ))
+        }
+    }
 
-    // Get the donut element and add an svg into it
-    var donutSVG = d3.select('#today').append('svg')
-        .attr('width', DONUT_WIDTH)
-        .attr('height', DONUT_HEIGHT)
+    function drawDonut(data) {
+        console.log(data)
+        // Get the donut element and add an svg into it
+        if(d3.select('#today').selectAll('#svg')) {
+            d3.select('#svg').remove()
+        }
+        var donutSVG = d3.select('#today').append('svg')
+            .attr('id', 'svg')
+            .attr('width', DONUT_WIDTH)
+            .attr('height', DONUT_HEIGHT)
 
-    // Add an svg group and move down from top left so we are centered nicely
-    var donut = donutSVG.append('g')
-        .attr('transform', `translate( ${DONUT_WIDTH / 2}, ${DONUT_HEIGHT / 2} )`)
+        // Add an svg group and move down from top left so we are centered nicely
+        var donut = donutSVG.append('g')
+            .attr('transform', `translate( ${DONUT_WIDTH / 2}, ${DONUT_HEIGHT / 2} )`)
 
-    // Define an arc to draw with D3
-    var arc = d3.arc()
-        .outerRadius(DONUT_RADIUS - 10)
-        .innerRadius(DONUT_RADIUS - 60);
+        // Define an arc to draw with D3
+        var arc = d3.arc()
+            .outerRadius(DONUT_RADIUS - 10)
+            .innerRadius(DONUT_RADIUS - 60);
 
-    // Define pie piece size, D3 pie() returns object with angles
-    var pie = d3.pie()
-        .value( (d) => d.value )
+        // Define pie piece size, D3 pie() returns object with angles
+        var pie = d3.pie()
+            .value( (d) => d.value )
 
-    // Define projection of data set to arc paths
-    var g = donut.selectAll('.arc')
-        .data(pie(groupByCategory))
-        .enter().append('g')
-        .attr('class', 'arc');
+        // Define projection of data set to arc paths
+        var g = donut.selectAll('.arc')
+            .data(pie(groupByCategory(data)))
+            .enter().append('g')
+            .attr('class', 'arc');
 
-    // Set some noice colors
-    var color = d3.scaleOrdinal().range(['#9232FF', '#C5FFB3', '#4EE1FF'])
+        // Select the data to be projected onto each arc path
+        g.append('path')
+            .attr('d', arc)
+            .style('fill', (d) => color(d.data.key))
+            .on('click', catClicked);
+    }
 
-    // Select the data to be projected onto each arc path
-    g.append('path')
-        .attr('d', arc)
-        .style('fill', (d) => color(d.data.key));
+    drawDonut(data)
 
 </script>
 
