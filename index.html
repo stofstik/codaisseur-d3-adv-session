@@ -254,45 +254,55 @@
         .rollup( (v) => d3.sum(v, (d) => d.value) )
         .entries(data);
 
+    // Create a table
+    // Get the html element
     var counterTable = d3.select('#counter_table').append('table');
+    // Set the header
     var counterTHead = counterTable.append('thead').append('tr');
-
     counterTHead.append('th').text('category');
     counterTHead.append('th').attr('class', 'value').text('value');
-
+    // Set the body
     var counterTBody = counterTable.append('tbody');
+    // Use D3 to render tr elements for each data entry
     var counterTR    = counterTBody.selectAll('tr')
         .data(groupByCategory).enter()
         .append('tr')
-
     counterTR.append('td').html((d) => d.key);
     counterTR.append('td').html((d) => d.value);
 
+    // Define donut size
     const DONUT_WIDTH  = 250;
     const DONUT_HEIGHT = 250;
     const DONUT_RADIUS = 125;
 
+    // Get the donut element and add an svg into it
     var donutSVG = d3.select('#today').append('svg')
         .attr('width', DONUT_WIDTH)
         .attr('height', DONUT_HEIGHT)
 
+    // Add an svg group and move down from top left so we are centered nicely
     var donut = donutSVG.append('g')
         .attr('transform', `translate( ${DONUT_WIDTH / 2}, ${DONUT_HEIGHT / 2} )`)
 
+    // Define an arc to draw with D3
     var arc = d3.arc()
         .outerRadius(DONUT_RADIUS - 10)
         .innerRadius(DONUT_RADIUS - 60);
 
+    // Define pie piece size, D3 pie() returns object with angles
     var pie = d3.pie()
         .value( (d) => d.value )
 
+    // Define projection of data set to arc paths
     var g = donut.selectAll('.arc')
         .data(pie(groupByCategory))
         .enter().append('g')
         .attr('class', 'arc');
 
+    // Set some noice colors
     var color = d3.scaleOrdinal().range(['#9232FF', '#C5FFB3', '#4EE1FF'])
 
+    // Select the data to be projected onto each arc path
     g.append('path')
         .attr('d', arc)
         .style('fill', (d) => color(d.data.key));
