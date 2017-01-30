@@ -181,7 +181,7 @@
         bottom: 70,
         left:   40
     }
-    var graphWidth  = 500 - graphMargin.left - graphMargin.right;
+    var graphWidth  = 600 - graphMargin.left - graphMargin.right;
     var graphHeight = 300 - graphMargin.top  - graphMargin.bottom;
 
     var svg = d3.select('#month').append('svg')
@@ -190,10 +190,13 @@
         .append('g')
         .attr('transform', ` translate( ${graphMargin.left}, ${graphMargin.top} ) `);
 
+    var lastDate = new Date(d3.max(data, (d) => d.date));
+    lastDate.setMonth(lastDate.getMonth() + 1);
+
     // Calc scales
     var x = d3.scaleTime()
         .range([0, graphWidth])
-        .domain([d3.min(data, (d) => d.date), d3.max(data, (d) => d.date)]);
+        .domain([d3.min(data, (d) => d.date), lastDate]);
     var y = d3.scaleLinear()
         .range([graphHeight, 0])
         .domain([0, d3.max(data, (d) => d.value)]);
