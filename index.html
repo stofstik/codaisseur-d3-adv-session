@@ -105,13 +105,11 @@
 
 </div>
 
-
-
 <script>
 
     data =
         [
-            {year: "2013-01", value: 53, category: "pants"},
+            {year: "2013-01", value: 53,  category: "pants"},
             {year: "2013-02", value: 165, category: "pants"},
             {year: "2013-03", value: 269, category: "pants"},
             {year: "2013-04", value: 344, category: "pants"},
@@ -128,10 +126,28 @@
         ];
 
     data.forEach(function(d) {
-        d.date = parseDate(d.year);
+        d.date = Date.parse(d.year);
         d.value = +d.value;
     });
 
+    var table = d3.select('#table').append('table');
+
+    var dateFormatter = d3.timeFormat('%Y-%m')
+
+    var thead = table.append('thead').append('tr');
+
+    thead.append('th').text('date');
+    thead.append('th').text('category');
+    thead.append('th').text('class', 'value').text('value');
+
+    var tbody = table.append('tbody');
+    var tr    = tbody.selectAll('tr')
+        .data(data).enter()
+        .append('tr');
+
+    tr.append('td').html((d) => dateFormatter(d.date))
+    tr.append('td').html((d) => d.category)
+    tr.append('td').html((d) => d.value)
 
 </script>
 
