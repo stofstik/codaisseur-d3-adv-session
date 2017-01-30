@@ -239,6 +239,64 @@
         .attr('dy', '-.35em')
         .text((d) => d.value);
 
+    /*
+       PI CHART
+    */
+
+    // Structure by category
+    // Creating 3 key value pairs: { category, totalValue }
+    // Using d3 sum helper to reduce specific values into one for each category
+    var groupByCategory = 
+        d3
+        .nest()
+        .key( (d) => d.category )
+        .sortKeys(d3.ascending)
+        .rollup( (v) => d3.sum(v, (d) => d.value) )
+        .entries(data);
+
+    var counterTable = d3.select('#counter_table').append('table');
+    var counterTHead = counterTable.append('thead').append('tr');
+
+    counterTHead.append('th').text('category');
+    counterTHead.append('th').attr('class', 'value').text('value');
+
+    var counterTBody = counterTable.append('tbody');
+    var counterTR    = counterTBody.selectAll('tr')
+        .data(groupByCategory).enter()
+        .append('tr')
+
+    counterTR.append('td').html((d) => d.key);
+    counterTR.append('td').html((d) => d.value);
+
+    const DONUT_WIDTH  = 250;
+    const DONUT_HEIGHT = 250;
+    const DONUT_RADIUS = 125;
+
+    var donutSVG = d3.select('#today').append('svg')
+        .attr('width', DONUT_WIDTH)
+        .attr('height', DONUT_HEIGHT)
+
+    var donut = donutSVG.append('g')
+        .attr('transform', `translate( ${DONUT_WIDTH / 2}, ${DONUT_HEIGHT / 2} )`)
+
+    var arc = d3.arc()
+        .outerRadius(DONUT_RADIUS - 10)
+        .innerRadius(DONUT_RADIUS - 60);
+
+    var pie = d3.pie()
+        .value( (d) => d.value )
+
+    var g = donut.selectAll('.arc')
+        .data(pie(groupByCategory))
+        .enter().append('g')
+        .attr('class', 'arc');
+
+    var color = d3.scaleOrdinal().range(['#9232FF', '#C5FFB3', '#4EE1FF'])
+
+    g.append('path')
+        .attr('d', arc)
+        .style('fill', (d) => color(d.data.key));
+
 </script>
 
 </body>
