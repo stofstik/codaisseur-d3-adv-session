@@ -75,6 +75,9 @@
         .y.axis path.domain{
             stroke: none;
         }
+        rect:hover {
+            fill: orange !important;
+        }
     </style>
     <script src="https://d3js.org/d3.v4.min.js"></script>
 </head>
@@ -121,17 +124,39 @@
             {year: "2013-10", value: 359, category: "shoes"},
             {year: "2013-11", value: 392, category: "shoes"},
             {year: "2013-12", value: 433, category: "shoes"},
-            {year: "2014-01", value: 455, category: "shoes"},
-            {year: "2014-02", value: 478, category: "shoes"}
+            // {year: "2014-01", value: 455, category: "shoes"},
+            // {year: "2014-02", value: 478, category: "shoes"},
+            // {year: "2014-03", value: 269, category: "pants"},
+            // {year: "2014-04", value: 344, category: "pants"},
+            // {year: "2014-05", value: 376, category: "shirt"},
+            // {year: "2014-06", value: 410, category: "shirt"},
+            // {year: "2014-07", value: 421, category: "shirt"},
+            // {year: "2014-08", value: 405, category: "shirt"},
+            // {year: "2014-09", value: 376, category: "shirt"},
+            // {year: "2014-10", value: 359, category: "shoes"},
+            // {year: "2014-11", value: 392, category: "shoes"},
+            // {year: "2014-12", value: 433, category: "shoes"},
+            // {year: "2015-01", value: 455, category: "shoes"},
+            // {year: "2015-02", value: 478, category: "shoes"},
+            // {year: "2015-03", value: 269, category: "pants"},
+            // {year: "2015-04", value: 344, category: "pants"},
+            // {year: "2015-05", value: 376, category: "shirt"},
+            // {year: "2015-06", value: 410, category: "shirt"},
+            // {year: "2015-07", value: 421, category: "shirt"},
+            // {year: "2015-08", value: 405, category: "shirt"},
+            // {year: "2015-09", value: 376, category: "shirt"},
+            // {year: "2015-10", value: 359, category: "shoes"},
+            // {year: "2015-11", value: 392, category: "shoes"},
+            // {year: "2015-12", value: 433, category: "shoes"},
         ];
 
+    var dateParser   = d3.timeParse('%Y-%m')
+    var dateFormatter = d3.timeFormat('%Y-%m')
+
     data.forEach(function(d) {
-        d.date = Date.parse(d.year);
+        d.date = dateParser(d.year);
         d.value = +d.value;
     });
-
-    var datePareser   = d3.timeParse('%Y-%m')
-    var dateFormatter = d3.timeFormat('%Y-%m')
 
     var table = d3.select('#table').append('table');
 
@@ -150,27 +175,27 @@
     tr.append('td').html((d) => d.category)
     tr.append('td').html((d) => d.value)
 
-    var monthMargin = {
+    var graphMargin = {
         top:    20,
         right:  20,
         bottom: 70,
         left:   40
     }
-    var monthWidth  = 900 - monthMargin.left - monthMargin.right;
-    var monthHeight = 300 - monthMargin.top  - monthMargin.bottom;
+    var graphWidth  = 500 - graphMargin.left - graphMargin.right;
+    var graphHeight = 300 - graphMargin.top  - graphMargin.bottom;
 
     var svg = d3.select('#month').append('svg')
-        .attr('width',  monthWidth  + monthMargin.left + monthMargin.right)
-        .attr('height', monthHeight + monthMargin.top  + monthMargin.bottom)
+        .attr('width',  graphWidth  + graphMargin.left + graphMargin.right)
+        .attr('height', graphHeight + graphMargin.top  + graphMargin.bottom)
         .append('g')
-        .attr('transform', ` translate( ${monthMargin.left}, ${monthMargin.top} ) `);
+        .attr('transform', ` translate( ${graphMargin.left}, ${graphMargin.top} ) `);
 
     // Calc scales
     var x = d3.scaleTime()
-        .range([0, monthWidth])
-        .domain([data[0].date, data[data.length - 1].date]);
+        .range([0, graphWidth])
+        .domain([d3.min(data, (d) => d.date), d3.max(data, (d) => d.date)]);
     var y = d3.scaleLinear()
-        .range([monthHeight, 0])
+        .range([graphHeight, 0])
         .domain([0, d3.max(data, (d) => d.value)]);
 
     svg.selectAll('rect')
@@ -178,9 +203,9 @@
         .enter().append('rect')
         .style('fill', '#A4C639')
         .attr('x', (d) => x(d.date))
-        .attr('width', 50)
+        .attr('width', (graphWidth + graphMargin.left + graphMargin.right) / data.length)
         .attr('y', (d) => y(d.value))
-        .attr('height', (d) => monthHeight - y(d.value));
+        .attr('height', (d) => graphHeight - y(d.value));
 
     var xAxis = d3.axisBottom()
         .scale(x)
@@ -188,16 +213,28 @@
 
     var yAxis = d3.axisLeft()
         .scale(y)
-        .tickSize(-monthWidth)
+        .tickSize(-graphWidth)
         .ticks(3);
 
     svg.append('g')
         .attr('class', 'x axis')
-        .attr('transform', `translate( 0, ${monthHeight} )`)
-        .call(xAxis)
+        .attr('transform', `translate( 0, ${graphHeight} )`)
+        .call(xAxis);
     svg.append('g')
         .attr('class', 'y axis')
-        .call(yAxis)
+        .call(yAxis);
+
+    svg.selectAll('label')
+        .data(data)
+        .enter()
+        .append('text')
+        .attr('class', 'label')
+        .style('fill', '#A4C639')
+        .attr('x', (d) => x(d.date))
+        .attr('y', (d) => y(d.value))
+        .attr('dx', '-.7em')
+        .attr('dy', '-.35em')
+        .text((d) => d.value);
 
 </script>
 
