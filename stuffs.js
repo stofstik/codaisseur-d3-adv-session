@@ -13,11 +13,11 @@ data = [
   {year: "2013-12", value: 433, category: "shoes"},
 ];
 
-var dateParser   = d3.timeParse('%Y-%m');
+var dateParser    = d3.timeParse('%Y-%m');
 var dateFormatter = d3.timeFormat('%Y-%m');
 
 data.forEach(function(d) {
-  d.date = dateParser(d.year);
+  d.date  = dateParser(d.year);
   d.value = +d.value;
 });
 
@@ -54,8 +54,7 @@ function catClicked(e) {
 
 // Create a table
 // Get the html element
-var counterTable = d3.select('#counter_table')
-  .append('table');
+var counterTable = d3.select('#counter_table').append('table');
 // Set the header
 var counterTHead = counterTable.append('thead').append('tr');
 counterTHead.append('th').text('category');
@@ -64,9 +63,7 @@ counterTHead.append('th').attr('class', 'value').text('value');
 // Set the body
 var counterTBody = counterTable.append('tbody');
 // Use D3 to render tr elements for each data entry
-var counterTR    = counterTBody.selectAll('tr')
-  .data(groupByCategory(data)).enter()
-  .append('tr')
+var counterTR = counterTBody.selectAll('tr').data(groupByCategory(data)).enter().append('tr')
 counterTR.append('td').html((d) => d.key);
 counterTR.append('td').html((d) => d.value);
 counterTR.style('background', (d) => color(d.key));
