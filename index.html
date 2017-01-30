@@ -269,6 +269,7 @@
     // Set the header
     var counterTHead = counterTable.append('thead').append('tr');
     counterTHead.append('th').text('category');
+    counterTHead.on('click', drawDonut.bind(this, data))
     counterTHead.append('th').attr('class', 'value').text('value');
     // Set the body
     var counterTBody = counterTable.append('tbody');
