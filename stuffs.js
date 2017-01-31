@@ -1,3 +1,4 @@
+// Define simple data structure
 data = [
   {year: "2013-01", value: 53,  category: "pants"},
   {year: "2013-02", value: 165, category: "pants"},
@@ -13,15 +14,17 @@ data = [
   {year: "2013-12", value: 433, category: "shoes"},
 ];
 
+// Some data time helpers
 var dateParser    = d3.timeParse('%Y-%m');
 var dateFormatter = d3.timeFormat('%Y-%m');
 
+// Convert datetime string to date object
 data.forEach(function(d) {
   d.date  = dateParser(d.year);
   d.value = +d.value;
 });
 
-// Set some noice colors
+// Define some noice colors
 var color = d3.scaleOrdinal().range(['#C5FFB3', '#4EE1FF', '#9232FF']);
 
 // Structure by category
@@ -36,8 +39,8 @@ function groupByCategory(data) {
     .entries(data);
 }
 
-function catClicked(e) {
-  // Get category
+// We clicked a category, rerender with this category omitted
+function categoryClicked(e) {
   if(e.key) {
     console.log(e.key);
     drawTable(data.filter( (d) => d.category !== e.key ));
@@ -52,8 +55,9 @@ function catClicked(e) {
   }
 }
 
-// Create a table
-// Get the html element
+/*
+ * Create the main top table with our categories and their total amounts
+ */
 var counterTable = d3.select('#counter_table').append('table');
 // Set the header
 var counterTHead = counterTable.append('thead').append('tr');
@@ -67,100 +71,11 @@ var counterTR = counterTBody.selectAll('tr').data(groupByCategory(data)).enter()
 counterTR.append('td').html((d) => d.key);
 counterTR.append('td').html((d) => d.value);
 counterTR.style('background', (d) => color(d.key));
-counterTR.on('click', catClicked);
+counterTR.on('click', categoryClicked);
 
-function drawTable(data) {
-  if(d3.select('#table').selectAll('table')) {
-    d3.select('#table').selectAll('table').remove()
-  }
-  var table = d3.select('#table').append('table');
-  var thead = table.append('thead').append('tr');
-
-  thead.append('th').text('date');
-  thead.append('th').text('category');
-  thead.append('th').text('class', 'value').text('value');
-
-  var tbody = table.append('tbody');
-  var tr    = tbody.selectAll('tr')
-    .data(data).enter()
-    .append('tr');
-
-  tr.append('td').html((d) => dateFormatter(d.date))
-  tr.append('td').html((d) => d.category)
-  tr.append('td').html((d) => d.value);
-}
-
-function drawChart(data) {
-  if(d3.select('#month').selectAll('#barchart')) {
-    d3.select('#barchart').remove();
-  }
-  var graphMargin = {
-    top:    20,
-    right:  20,
-    bottom: 70,
-    left:   40
-  };
-  var graphWidth  = 600 - graphMargin.left - graphMargin.right;
-  var graphHeight = 300 - graphMargin.top  - graphMargin.bottom;
-
-  var svg = d3.select('#month').append('svg')
-    .attr('id', 'barchart')
-    .attr('width',  graphWidth  + graphMargin.left + graphMargin.right)
-    .attr('height', graphHeight + graphMargin.top  + graphMargin.bottom)
-    .append('g')
-    .attr('transform', ` translate( ${graphMargin.left}, ${graphMargin.top} ) `);
-
-  var lastDate = new Date(d3.max(data, (d) => d.date));
-  lastDate.setMonth(lastDate.getMonth() + 1);
-
-  // Calc scales
-  var x = d3.scaleTime()
-    .range([0, graphWidth])
-    .domain([d3.min(data, (d) => d.date), lastDate]);
-  var y = d3.scaleLinear()
-    .range([graphHeight, 0])
-    .domain([0, d3.max(data, (d) => d.value)]);
-
-  svg.selectAll('rect').remove()
-  svg.selectAll('rect')
-    .data(data)
-    .enter().append('rect')
-    .style('fill', '#A4C639')
-    .attr('x', (d) => x(d.date))
-    .attr('width', (graphWidth + graphMargin.left + graphMargin.right) / data.length)
-    .attr('y', (d) => y(d.value))
-    .attr('height', (d) => graphHeight - y(d.value));
-
-  var xAxis = d3.axisBottom()
-    .scale(x)
-    .tickFormat(d3.timeFormat('%Y-%m'));
-
-  var yAxis = d3.axisLeft()
-    .scale(y)
-    .tickSize(-graphWidth)
-    .ticks(3);
-
-  svg.append('g')
-    .attr('class', 'x axis')
-    .attr('transform', `translate( 0, ${graphHeight} )`)
-    .call(xAxis);
-  svg.append('g')
-    .attr('class', 'y axis')
-    .call(yAxis);
-
-  svg.selectAll('label')
-    .data(data)
-    .enter()
-    .append('text')
-    .attr('class', 'label')
-    .style('fill', '#A4C639')
-    .attr('x', (d) => x(d.date))
-    .attr('y', (d) => y(d.value))
-    .attr('dx', '-.7em')
-    .attr('dy', '-.35em')
-    .text((d) => d.value);
-}
-
+/*
+ * Draw a donut using combined total per category as slice size
+ */
 function drawDonut(data) {
   // Define donut size
   const DONUT_WIDTH  = 250;
@@ -199,7 +114,112 @@ function drawDonut(data) {
   g.append('path')
     .attr('d', arc)
     .style('fill', (d) => color(d.data.key))
-    .on('click', catClicked);
+    .on('click', categoryClicked);
+}
+
+/*
+ * Draw a bar chart containing 'value' per month
+ */
+function drawChart(data) {
+  // Remove if already exists
+  if(d3.select('#month').selectAll('#barchart')) {
+    d3.select('#barchart').remove();
+  }
+  var graphMargin = {
+    top:    20,
+    right:  20,
+    bottom: 70,
+    left:   40
+  };
+  var graphWidth  = 600 - graphMargin.left - graphMargin.right;
+  var graphHeight = 300 - graphMargin.top  - graphMargin.bottom;
+
+  var svg = d3.select('#month').append('svg')
+    .attr('id', 'barchart')
+    .attr('width',  graphWidth  + graphMargin.left + graphMargin.right)
+    .attr('height', graphHeight + graphMargin.top  + graphMargin.bottom)
+    .append('g')
+    .attr('transform', ` translate( ${graphMargin.left}, ${graphMargin.top} ) `);
+
+  // Add one month to domain otherwise we end up with one bar out of the graph
+  // Feels hacky...
+  var lastDate = new Date(d3.max(data, (d) => d.date));
+  lastDate.setMonth(lastDate.getMonth() + 1);
+
+  // Calc scales
+  var x = d3.scaleTime()
+    .range([0, graphWidth])
+    .domain([d3.min(data, (d) => d.date), lastDate]);
+  var y = d3.scaleLinear()
+    .range([graphHeight, 0])
+    .domain([0, d3.max(data, (d) => d.value)]);
+
+  // Define how to draw rectangles (bars)
+  svg.selectAll('rect').remove()
+  svg.selectAll('rect')
+    .data(data)
+    .enter().append('rect')
+    .style('fill', '#A4C639')
+    .attr('x', (d) => x(d.date))
+    .attr('width', (graphWidth + graphMargin.left + graphMargin.right) / data.length)
+    .attr('y', (d) => y(d.value))
+    .attr('height', (d) => graphHeight - y(d.value));
+
+  // Define x and y axis for amount indication
+  var xAxis = d3.axisBottom()
+    .scale(x)
+    .tickFormat(d3.timeFormat('%Y-%m'));
+  var yAxis = d3.axisLeft()
+    .scale(y)
+    .tickSize(-graphWidth)
+    .ticks(3);
+
+  // Add x and y axis 
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', `translate( 0, ${graphHeight} )`)
+    .call(xAxis);
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis);
+
+  // Add labels with actual amount
+  svg.selectAll('label')
+    .data(data)
+    .enter()
+    .append('text')
+    .attr('class', 'label')
+    .style('fill', '#333')
+    .attr('x', (d) => x(d.date))
+    .attr('y', (d) => y(d.value))
+    .attr('dx', '.7em')
+    .attr('dy', '-.35em')
+    .text((d) => d.value);
+}
+
+/*
+ * Draw the bottom table with a tr per item in the data array
+ */
+function drawTable(data) {
+  // Remove if already exists
+  if(d3.select('#table').selectAll('table')) {
+    d3.select('#table').selectAll('table').remove()
+  }
+  var table = d3.select('#table').append('table');
+  var thead = table.append('thead').append('tr');
+
+  thead.append('th').text('date');
+  thead.append('th').text('category');
+  thead.append('th').text('class', 'value').text('value');
+
+  var tbody = table.append('tbody');
+  var tr    = tbody.selectAll('tr')
+    .data(data).enter()
+    .append('tr');
+
+  tr.append('td').html((d) => dateFormatter(d.date))
+  tr.append('td').html((d) => d.category)
+  tr.append('td').html((d) => d.value);
 }
 
 function reset() {
@@ -209,5 +229,3 @@ function reset() {
 }
 
 reset();
-
-
