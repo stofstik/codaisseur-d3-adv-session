@@ -23,4 +23,5 @@ data = [
   {year: "2013-10", value: 359, category: "shoes"},
   {year: "2013-11", value: 392, category: "shoes"},
   {year: "2013-12", value: 433, category: "shoes"},
-];```
+];
+```
